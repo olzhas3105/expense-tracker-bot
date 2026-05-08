@@ -2,16 +2,13 @@ import sqlite3
 from datetime import datetime
 DB_PATH = "expenses.db"
 
-
 def get_connection() -> sqlite3.Connection:
-    """Создаёт и возвращает соединение с базой данных."""
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     return conn
 
 
 def init_db() -> None:
-    """Инициализирует таблицу расходов при первом запуске."""
     with get_connection() as conn:
         conn.execute("""
             CREATE TABLE IF NOT EXISTS expenses (
@@ -48,9 +45,8 @@ def add_expense(user_id: int, amount: float, category: str, note: str = "") -> i
         conn.commit()
         return cursor.lastrowid
 
-
 def get_expenses(user_id: int, limit: int = 10) -> list[sqlite3.Row]:
-    """Возвращает последние расходы пользователя."""
+    """Возвращает последние N расходов пользователя."""
     with get_connection() as conn:
         rows = conn.execute(
             "SELECT * FROM expenses WHERE user_id = ? ORDER BY created_at DESC LIMIT ?",
@@ -62,15 +58,13 @@ def get_expenses(user_id: int, limit: int = 10) -> list[sqlite3.Row]:
 def delete_expense(user_id: int, expense_id: int) -> bool:
     """
     Удаляет расход по ID (только свой).
-
     Returns:
         True если запись удалена, False если не найдена.
     """
     with get_connection() as conn:
         cursor = conn.execute(
             "DELETE FROM expenses WHERE id = ? AND user_id = ?",
-            (expense_id, user_id),
-        )
+            (expense_id, user_id),)
         conn.commit()
         return cursor.rowcount > 0
 

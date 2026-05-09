@@ -26,7 +26,6 @@ def init_db() -> None:
         conn.commit()
 
 def add_expense(user_id: int, amount: float, category: str, note: str = "") -> int:
-    """Добавляет новый расход и возвращает его ID."""
     with get_connection() as conn:
         cursor = conn.execute(
             "INSERT INTO expenses (user_id, amount, category, note) VALUES (?, ?, ?, ?)",
@@ -36,7 +35,6 @@ def add_expense(user_id: int, amount: float, category: str, note: str = "") -> i
         return cursor.lastrowid
 
 def get_expenses(user_id: int, limit: int = 10) -> list[sqlite3.Row]:
-    """Возвращает последние N расходов конкретного пользователя."""
     with get_connection() as conn:
         rows = conn.execute(
             "SELECT * FROM expenses WHERE user_id = ? ORDER BY created_at DESC LIMIT ?",
@@ -56,3 +54,14 @@ def delete_expense(user_id: int, expense_id: int) -> bool:
         )
         conn.commit()
         return cursor.rowcount > 0
+def get_expenses_by_period(user_id: int, start: str, end: str) -> list[sqlite3.Row]:
+    """Возвращает расходы пользователя за указанный период (YYYY-MM-DD)."""
+    with get_connection() as conn:
+        rows = conn.execute(
+            """SELECT * FROM expenses
+               WHERE user_id = ?
+                 AND DATE(created_at) BETWEEN ? AND ?
+               ORDER BY created_at DESC""",
+            (user_id, start, end),
+        ).fetchall()
+    return rows
